@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        #add-post-form {
+            display: flex;
+            flex-direction: column;
+        }
+        #content {
+            width: 50%;
+            flex-direction: column;
+            
+        }
+
+        .all {
+            display: flex;
+            justify-content: center;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        .post {
+            padding: 1rem 1rem;
+            margin-bottom: 1rem;
+            border: 1px solid black;
+            position: relative
+        }
+
+        .post button {
+            position: absolute;
+            top: 0.5rem;
+            right: 1rem;
+            
+        }
+    </style>
+</head>
+<body>
+    <div class="all">
+        <div id="content">
+            <h1>Blog</h1>
+
+            <div id="add-post"></div>
+
+                <form id="add-post-form">
+                    <label for="">Title</label>
+                    <input type="text" name="title" required>
+                    <textarea style="resize:none;" name="text" id="" cols="30" rows="10" required></textarea>
+                    <label for="">Author</label>
+                    <input type="text" name="author" required>
+                    <button>Add post</button>
+                </form>
+            
+        </div>
+    </div>
+
+
+    <script>
+
+
+        function deletingPosts() {
+            const deleteBtns = document.getElementsByClassName('delete-btn');
+            for (let i = 0; i < deleteBtns.length; i++) {
+                deleteBtns[i].addEventListener('click', () => {
+                    const postsIdThatWIllBeDeleted = deleteBtns[i].id.split('-')[2]
+                    fetch('./delete-post', {
+                        method: "POST",
+                        headers: {
+                            'Content-Type': "application/json; charset=UTF-8", 
+                        },
+                        body: JSON.stringify({postsIdThatWIllBeDeleted})
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            window.location.reload();
+                        } else {
+                            // Handle error
+                    }
+                })  
+                    
+                })
+            }
+        };
+
+        let form = document.getElementById('add-post-form');
+        form.addEventListener('submit', (e) => {
+           // e.preventDefault();
+
+
+            const payload = new FormData(form);
+            let parsedForm = [...payload]
+
+            fetch('/add-post', {
+                method: 'POST', 
+                headers: {
+                    "Content-type": "application/json; charset=UTF-8"
+                },
+                body: JSON.stringify(parsedForm)
+            })
+            
+            console.log(parsedForm)
+        })
+
+        const feed = document.getElementById('add-post')
+        let info = fetch('/render-posts')
+        .then(res => res.json())
+        .then(posts => {
+            let done = false;
+            let i = 0;
+             for (post of posts){
+                feed.innerHTML += renderPost(post['title'], post['text'], post['author'], [i])
+                
+                i++;
+
+            }
+            done = true;
+            if (done) deletingPosts();
+        })
+
+        function renderPost(title, text, author, id) {
+            const pattern = `
+            <div class="post" id="post-${id}">
+                <span><h3>${title}</h3>
+                <button  class="delete-btn" id="delete-btn-${id}">X</button> 
+                <p>${text}</p>
+                <p style="text-align:right;">Auhor: ${author}</p>
+                
+            </div>
+            `;
+            return pattern;
+        }
+    </script>
+</body>
+</html>
